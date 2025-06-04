@@ -3,7 +3,7 @@
 	import Templates from '$lib/components2/templates.svelte';
 	import Pricing from '$lib/components2/pricing.svelte';
 	import Steps from '$lib/components2/steps.svelte';
-	import Footer from '$lib/components2/Footer.svelte';
+	import Footer from '$lib/components2/footer2.svelte';
 </script>
 
 <main class="min-h-screen">
