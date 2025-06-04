@@ -1,0 +1,156 @@
+import PocketBase from 'pocketbase';
+import { writable, type Writable } from 'svelte/store';
+import type { AuthModel } from 'pocketbase';
+
+// Create a store for the current user
+export const currentUser: Writable<AuthModel | null> = writable(null);
+
+// Environment variables (will be replaced by Vite at build time)
+export const POCKETBASE_URL = import.meta.env.VITE_POCKETBASE_URL || 'https://awspb.mayankjoshi.in';
+export const MASTER_EMAIL = import.meta.env.VITE_MASTER_BUILDER_EMAIL || '';
+export const MASTER_PASSWORD = import.meta.env.VITE_MASTER_BUILDER_PASSWORD || '';
+
+// Define the OAuth2 options type
+interface OAuth2Options {
+    provider: string;
+    scopes?: string[];
+    redirectUrl?: string;
+    createData?: Record<string, unknown>;
+    urlCallback?: (url: string) => void;
+    [key: string]: unknown;
+}
+
+export class PocketBaseClient {
+    
+    
+    private pb: PocketBase;
+    private static instance: PocketBaseClient;
+    private token = '';
+
+    private constructor() {
+        this.pb = new PocketBase(POCKETBASE_URL);
+        console.log('PocketBase initialized with URL:', POCKETBASE_URL);
+        
+        // Subscribe to auth state changes
+        this.pb.authStore.onChange((token, model) => {
+            console.log('Auth state changed:', !!token);
+            currentUser.set(model);
+        });
+    }
+
+    // Singleton pattern to ensure only one instance exists
+    public static getInstance(): PocketBaseClient {
+        if (!PocketBaseClient.instance) {
+            PocketBaseClient.instance = new PocketBaseClient();
+        }
+        return PocketBaseClient.instance;
+    }
+
+    // Automatically login with master credentials
+    public async autoLogin(): Promise<boolean> {
+        try {
+            // Check if we have credentials
+            if (!MASTER_EMAIL || !MASTER_PASSWORD) {
+                console.warn('Auto-login skipped: missing credentials in environment variables');
+                return false;
+            }
+            
+            console.log('Attempting auto-login with master credentials...');
+            await this.loginWithPassword(MASTER_EMAIL, MASTER_PASSWORD);
+            console.log('Auto-login successful');
+            return true;
+        } catch (error) {
+            console.error('Auto-login failed:', error);
+            return false;
+        }
+    }
+
+    // Authentication methods
+    public async loginWithPassword(email: string, password: string) {
+
+        const authData =  await this.pb.collection('users').authWithPassword(email, password);
+        this.pb.authStore.save(authData.token, authData.record);
+        console.log('Auth data:', authData);
+        return authData;
+    }
+
+    public async loginWithOAuth2(provider: string, options?: Partial<OAuth2Options>) {
+        console.log(`Initiating OAuth2 flow with provider: ${provider}`);
+        
+        const authOptions: OAuth2Options = {
+            provider: provider,
+            ...(options || {})
+        };
+        
+        // If no redirectUrl is provided, use our callback page
+        if (!authOptions.redirectUrl && typeof window !== 'undefined') {
+            authOptions.redirectUrl = `${window.location.origin}/auth/callback`;
+            console.log(`Using callback URL: ${authOptions.redirectUrl}`);
+        }
+        
+        // Default scopes for GitHub if not provided
+        if (!authOptions.scopes && provider === 'github') {
+            authOptions.scopes = ['user:email'];
+        }
+        
+        console.log('Final OAuth2 options:', authOptions);
+        
+        return await this.pb.collection('users').authWithOAuth2(authOptions);
+    }
+
+    public async logout() {
+        this.pb.authStore.clear();
+    }
+
+    public getCurrentUser(): AuthModel | null {
+        return this.pb.authStore.record;
+    }
+
+    // CRUD operations
+    public async getList(collection: string, page = 1, perPage = 50, filters = {}) {
+        const records = await this.pb.collection(collection).getList(page, perPage, filters);
+        return records.items;
+    }
+
+    public async getFullList(collection: string, filters = {}) {
+        return await this.pb.collection(collection).getFullList(filters);
+    }
+    
+    public async getFirstListItem(collection: string, expand : string = '') {
+        return await this.pb.collection(collection).getFirstListItem(expand);
+    }
+
+    public async getOne(collection: string, id: string) {
+        return await this.pb.collection(collection).getOne(id);
+    }
+
+    public async create(collection: string, data: Record<string, unknown>) {
+        return await this.pb.collection(collection).create(data);
+    }
+
+    public async update(collection: string, id: string, data: Record<string, unknown>) {
+        return await this.pb.collection(collection).update(id, data);
+    }
+
+    public async delete(collection: string, id: string) {
+        return await this.pb.collection(collection).delete(id);
+    }
+
+    public async getPersonalData() {
+
+        const records = await this.pb.collection('personal_details').getFullList({
+            expand: 'soceial_media,userid',
+            // fields: 'id,name,email_id,phone_number,address,one_liner,about_me,typewrite_options,avatar,soceial_media.name,userid.name,userid.email,created,updated'
+          });
+
+        return records;
+    }
+
+    // Get PocketBase instance if needed
+    public getPocketBase() {
+        return this.pb;
+    }
+}
+
+// Export a default instance for convenience
+export const pb = PocketBaseClient.getInstance(); 
