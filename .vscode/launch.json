@@ -1,0 +1,32 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "SvelteKit: backend (Node.js)",
+      "program": "${workspaceFolder}/node_modules/vite/bin/vite.js",
+      "args": ["dev"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**", "node_modules/**"]
+    },
+    {
+      "type": "pwa-chrome",
+      "request": "launch",
+      "name": "SvelteKit: frontend (Chrome)",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/src"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "SvelteKit: hybrid (backend + frontend)",
+      "configurations": [
+        "SvelteKit: backend (Node.js)",
+        "SvelteKit: frontend (Chrome)"
+      ]
+    }
+  ]
+} 

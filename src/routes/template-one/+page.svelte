@@ -51,9 +51,9 @@ function formatDate(date: Date | string) {
 
         <div class="flex justify-center gap-6">
           {#each data.personal.expand.soceial_media as social}
-            <a href="#" class="p-4 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-all hover:scale-110">
+            <button type="button" class="p-4 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-all hover:scale-110">
               {social.name}
-            </a>
+            </button>
           {/each}
         </div>
       </div>

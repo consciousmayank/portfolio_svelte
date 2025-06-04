@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+- I have added DaisyUi library for making better UI. 
+- Use that alwasy in the whole app.
