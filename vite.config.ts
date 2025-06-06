@@ -12,10 +12,10 @@ export default defineConfig({
 		// Reduce memory usage
 		rollupOptions: {
 			output: {
-				// Split chunks to reduce bundle size
+				// Split chunks to reduce bundle size - only include packages that aren't external
 				manualChunks: {
-					vendor: ['svelte', '@sveltejs/kit'],
-					utils: ['gsap', 'lucide-svelte', 'svelte-typewriter']
+					vendor: ['svelte'],
+					ui: ['lucide-svelte', 'svelte-typewriter']
 				}
 			}
 		}
