@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "build",
+  "framework": "sveltekit",
+  "installCommand": "npm install",
+  "env": {
+    "VITE_POCKETBASE_URL": "@vite_pocketbase_url",
+    "VITE_MASTER_BUILDER_EMAIL": "@vite_master_builder_email", 
+    "VITE_MASTER_BUILDER_PASSWORD": "@vite_master_builder_password"
+  }
+} 
